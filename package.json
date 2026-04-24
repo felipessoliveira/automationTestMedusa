@@ -1,0 +1,29 @@
+{
+  "name": "automation-test-medusa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright + Cucumber (TypeScript, POM) automation tests for the Medusa storefront.",
+  "scripts": {
+    "test": "cucumber-js --parallel 4",
+    "test:api": "cucumber-js -p api --parallel 4",
+    "test:ui": "cucumber-js -p ui --parallel 4",
+    "test:serial": "cucumber-js",
+    "report:clean": "rimraf reports/allure-report",
+    "report:gen": "allure generate reports/allure-results --clean -o reports/allure-report",
+    "report:open": "allure open reports/allure-report",
+    "pw:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.0.0",
+    "@faker-js/faker": "^9.0.0",
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^22.0.0",
+    "allure-commandline": "^2.30.0",
+    "allure-cucumberjs": "^3.0.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.0"
+  }
+}
