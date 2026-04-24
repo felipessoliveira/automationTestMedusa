@@ -4,10 +4,11 @@
   "private": true,
   "description": "Playwright + Cucumber (TypeScript, POM) automation tests for the Medusa storefront.",
   "scripts": {
-    "test": "cucumber-js --parallel 4",
+    "test": "cucumber-js -p default --parallel 4",
     "test:api": "cucumber-js -p api --parallel 4",
     "test:ui": "cucumber-js -p ui --parallel 4",
-    "test:serial": "cucumber-js",
+    "test:ui:stock": "cucumber-js -p ui:stock --parallel 4",
+    "test:serial": "cucumber-js -p default",
     "report:clean": "rimraf reports/allure-report",
     "report:gen": "allure generate reports/allure-results --clean -o reports/allure-report",
     "report:open": "allure open reports/allure-report",

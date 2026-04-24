@@ -24,9 +24,12 @@ export class CartPage extends BasePage {
     const out: CartLine[] = [];
     for (let i = 0; i < n; i++) {
       const row = rows.nth(i);
-      const name = (await row.locator('[data-testid="product-title"], a[href*="/products/"]').first().textContent())?.trim() ?? '';
+      const name =
+        (await row.locator('[data-testid="product-title"]').first().textContent().catch(() => ''))?.trim() ||
+        (await row.locator('a[href*="/products/"]').first().textContent().catch(() => ''))?.trim() ||
+        '';
       const qtyText =
-        (await row.locator('[data-testid="product-quantity"], input[name*="quantity"]').first().inputValue().catch(() => '')) ||
+        (await row.locator('[data-testid="product-select-button"], [data-testid="product-quantity"], input[name*="quantity"]').first().inputValue().catch(() => '')) ||
         (await row.locator('[data-testid="product-quantity"], span:has-text("Qty")').first().textContent().catch(() => '')) ||
         '1';
       const qty = Number(qtyText.replace(/\D/g, '')) || 1;

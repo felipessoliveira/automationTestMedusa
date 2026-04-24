@@ -1,53 +1,63 @@
 # Medusa Storefront Test Automation — Initial Setup Plan
 
-> **Status as of this update.** Framework scaffold is complete and running. Test run shows **1 of 4 scenarios green** against the live demo storefront; the remaining 3 are blocked on environmental configuration described below. See the [Status](#status--what-is-done-vs-what-is-left) section for the punch list.
+> **Status as of this update.** Framework scaffold and follow-up fixes are complete on `feat/initial-scaffold`. PR #1 (https://github.com/felipessoliveira/automationTestMedusa/pull/1) has been closed. The default suite is green, the stock-gated cart profile is green, and Allure report generation is working from `reports/allure-results`.
 
 ## Status — what is done vs what is left
 
-### ✅ Done (framework)
+### ✅ Done (framework + integration)
 
 | Area | Status | Notes |
 |---|---|---|
 | Project scaffold | ✅ | `package.json`, `tsconfig.json`, `.gitignore`, `.env.example`, `README.md` |
 | Cucumber + Playwright wiring | ✅ | `cucumber.js` profiles (`default` / `api` / `ui`), `playwright.config.ts`, support layer (`world.ts`, `hooks.ts`, `config.ts`, `allure.ts`) |
 | Test-data fixtures | ✅ | `fixtures/users/default.json`, `fixtures/users/login.json`, `fixtures/products/default.json` + `src/utils/fixtures.ts` (`loadFixture` / `mergeFixture` / `buildFixture`) + `src/utils/data.ts` (token expansion: `<timestamp>`, `<uuid>`, etc.) |
-| Page Objects | ✅ | `BasePage`, `HomePage`, `AccountPage`, `ProductPage`, `CartPage`. Selectors moved to the storefront's `data-testid` attributes (`email-input`, `password-input`, `first-name-input`, `register-button`, `option-button`, `add-product-button`) after live DOM probe. |
-| API client | ✅ | `src/api/clients/customerClient.ts` + typed models in `src/api/models/customer.ts` |
+| Page Objects | ✅ | `BasePage`, `HomePage`, `AccountPage`, `ProductPage`, `CartPage` — all using the storefront's stable `data-testid` attributes. |
+| API client (Medusa v2) | ✅ | `customerClient.register` now runs the two-step flow: `POST /auth/customer/emailpass/register` → Bearer `POST /store/customers`. `authenticate` posts to `/auth/customer/emailpass`. |
 | Features + step defs | ✅ | 4 `.feature` files, 5 step-def modules. `Scenario Outline` + `Examples:` overrides merged over JSON fixture templates. |
 | Parallel execution | ✅ | `npm run test`, `test:api`, `test:ui` all run with `--parallel 4`. Serial escape-hatch: `npm run test:serial`. |
-| Allure reporting | ✅ | Wired via `--format allure-cucumberjs/reporter`. Screenshot + HTML attached on UI failure; API request/response JSON attached on API scenarios. |
-| Dependency install | ✅ | `npm install` + `npx playwright install chromium` done. |
-| Backend discovery probe | ✅ | `scripts/discover_backend.ts` runs; confirmed that the live storefront hides the Medusa backend behind Next.js Server Actions (no `/store/*` client calls, no `x-publishable-api-key` in the browser). Decision: point `.env` at a separate accessible Medusa backend. |
+| Allure reporting | ✅ | `--format allure-cucumberjs/reporter`. Screenshot + HTML attached on UI failure; API request/response JSON attached on API scenarios. Results are written to `reports/allure-results`; `npm run report:gen` succeeds. |
+| Dependency install | ✅ | `npm install` + `npx playwright install chromium`. |
+| Backend config in `.env` | ✅ | `MEDUSA_API_URL=https://medusa-backend-839705751382.europe-west1.run.app`, `MEDUSA_PUBLISHABLE_KEY=pk_5baf...` — verified reachable. |
+| Shared user seeded | ✅ | `scripts/seed_shared_user.ts` created `cus_01KPZJ3R4N9DJMMGPE4DGS1VY7` (`qa.shared.user@example.com`). Idempotent: re-runs report "already exists" via HTTP 401 from `/auth/...emailpass/register` and exit 0. |
+| Git + PR | ✅ | Private repo `felipessoliveira/automationTestMedusa`. `main` + `feat/initial-scaffold` pushed. PR #1 was opened against `main` and is now closed. |
 
-### ✅ Last live run
+### ✅ Last verified runs
 
 ```
-5 scenarios executed (parallel)
-  ✅  UI   — Create user (storefront sign-up form)
-  ❌  API  — Create user            (blocked on .env — see Remaining #1)
-  ❌  UI   — Login                  (blocked on seeded user — see Remaining #2)
-  ❌  UI   — Add to cart  (× 2)     (blocked on inventory — see Remaining #3)
+npm run test           3 scenarios  — 3 passed
+npm run test:ui:stock  2 scenarios  — 2 passed
+npm run report:gen     Report successfully generated to reports/allure-report
 ```
 
-Selector bugs found and fixed during that run (already committed to the POMs):
-- `AccountPage` now uses the hydrated `data-testid` nodes and waits for the register form to mount after clicking `[data-testid="register-button"]`.
-- `ProductPage.variantOptions` narrowed to `button[data-testid="option-button"]` — was previously matching the `/store` page's sort dropdown.
-- `AccountPage.expectLoggedIn` now asserts `emailInput` becomes hidden — eliminated the false-positive "login passed" when login actually failed.
+The cart scenarios remain tagged `@requires-stock` and are excluded from the default run. They now pass when executed through the opt-in stock profile.
 
-### 🟡 Remaining
+### 🟡 Remaining — follow-up workflow
 
-| # | Task | Owner | Unblocks |
-|---|---|---|---|
-| 1 | Create local `.env` from `.env.example` (values already pasted into the example file: `MEDUSA_API_URL=https://medusa-backend-839705751382.europe-west1.run.app`, `MEDUSA_PUBLISHABLE_KEY=pk_5baf...`) | user (or Claude, on request) | `@api` create user |
-| 2 | Run `scripts/seed_shared_user.ts` (to be written in Phase B) to register the shared login user via the Store API using `fixtures/users/login.json`. Idempotent — ignores 409/422 "already exists". | Claude (Phase B) | `@ui` login |
-| 3 | Phase C (tag-and-guard): add `@requires-stock` to `features/ui/add_product_to_cart.feature`, add `ui:stock` profile to `cucumber.js`, README note. The live demo has no inventory — scenarios are kept green by excluding them from default runs and exposing an opt-in profile for when stock is available. | Claude (Phase C) | Default `npm run test:ui` becomes green; cart scenarios runnable on demand via `npm run test:ui:stock`. |
-| 4 | `npm run test:api` to confirm `@api` green once `.env` is in place. | Claude | — |
-| 5 | `npm run test:ui` to confirm all 3 UI scenarios green (2 default + cart opt-in). | Claude | — |
-| 6 | Generate Allure report: `npm run report:gen && npm run report:open`. | Claude | Final deliverable |
+| # | Task | Notes |
+|---|---|---|
+| G1 | Open a replacement follow-up PR from the current verified branch state. | PR #1 is closed; the next review step should supersede it with the current implementation and docs. |
+| G2 | Keep PR-facing documentation (`README.md`, `PLAN.md`, `AGENTS.md`) aligned with the current branch state. | The repo behavior is ahead of the original scaffold narrative. |
+
+### ✅ Phase C completed
+
+| # | Task | Notes |
+|---|---|---|
+| C1 | Add `@requires-stock` tag to `features/ui/add_product_to_cart.feature` | Done. |
+| C2 | Update `cucumber.js` UI profile to `--tags "@ui and not @requires-stock"` | Done. |
+| C3 | Add a new `ui:stock` profile + `test:ui:stock` npm script | Done. |
+| C4 | README section for stock-dependent scenarios | Done. |
+| C5 | Run `npm run test:ui` and expect a fully green default run | Verified: `2 scenarios (2 passed)` on 2026-04-24. |
+| C6 | Generate the Allure report (`npm run report:gen && npm run report:open`) | `report:gen` verified; `report:open` not re-verified in this environment. |
+
+### Stretch (not gating)
+
+- Open the next review PR from the current verified branch state.
+- CI workflow (GitHub Actions). Out of scope for this iteration.
+- `scripts/seed_stock.ts` — only if you gain Medusa admin access to the backend.
 
 ### Immediate next step
 
-Copy `.env.example` → `.env` (the values are already filled in the example), then implement Phase B (seed-shared-user script) and Phase C (cart tag/profile guard). `@api` should pass the moment `.env` exists; `@ui` login should pass after seeding; `@ui` add-to-cart will be excluded from the default profile with a clear "requires stocked backend" note.
+Open the replacement PR from the current verified branch state now that PR #1 is closed.
 
 ---
 

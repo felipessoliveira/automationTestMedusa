@@ -1,15 +1,28 @@
-const common = [
-  'features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require src/support/**/*.ts',
-  '--require src/steps/**/*.ts',
-  '--format allure-cucumberjs/reporter',
-  '--format summary',
-  '--format progress-bar',
-].join(' ');
+const common = {
+  paths: ['features/**/*.feature'],
+  requireModule: ['ts-node/register'],
+  require: ['src/support/**/*.ts', 'src/steps/**/*.ts'],
+  format: ['allure-cucumberjs/reporter', 'summary', 'progress-bar'],
+  formatOptions: {
+    resultsDir: 'reports/allure-results',
+  },
+};
 
 module.exports = {
-  default: common,
-  api: `${common} --tags @api`,
-  ui: `${common} --tags @ui`,
+  default: {
+    ...common,
+    tags: 'not @requires-stock',
+  },
+  api: {
+    ...common,
+    tags: '@api',
+  },
+  ui: {
+    ...common,
+    tags: '@ui and not @requires-stock',
+  },
+  'ui:stock': {
+    ...common,
+    tags: '@ui and @requires-stock',
+  },
 };

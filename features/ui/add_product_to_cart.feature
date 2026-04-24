@@ -1,4 +1,4 @@
-@ui @cart
+@ui @cart @requires-stock
 Feature: Add product to cart
 
   Scenario Outline: Add a product to the cart
