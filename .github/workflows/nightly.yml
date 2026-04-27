@@ -33,6 +33,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
       - name: Seed shared user
         run: npx ts-node scripts/seed_shared_user.ts
 
