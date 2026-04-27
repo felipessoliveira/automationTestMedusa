@@ -116,14 +116,11 @@ jobs:
           retention-days: 30
 
   publish-report:
-    name: Publish Allure to Pages
+    name: Build Allure Pages artifact
     needs: [api, ui]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -221,6 +218,16 @@ jobs:
         with:
           path: reports/allure-report
 
+  deploy-pages:
+    name: Deploy Allure to Pages
+    needs: publish-report
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
