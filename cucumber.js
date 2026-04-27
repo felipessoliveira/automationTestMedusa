@@ -2,7 +2,11 @@ const common = {
   paths: ['features/**/*.feature'],
   requireModule: ['ts-node/register'],
   require: ['src/support/**/*.ts', 'src/steps/**/*.ts'],
-  format: ['allure-cucumberjs/reporter', 'summary', 'progress-bar'],
+  format: [
+    'allure-cucumberjs/reporter:reports/allure-cucumber.log',
+    'summary',
+    'progress-bar',
+  ],
   formatOptions: {
     resultsDir: 'reports/allure-results',
   },
