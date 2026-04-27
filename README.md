@@ -45,6 +45,21 @@ npm run report:open   # opens the report in a browser
 
 On failure each UI scenario attaches a full-page screenshot + rendered HTML; each API scenario attaches the request payload + response body + status.
 
+## Nightly CI and GitHub Pages
+
+The `.github/workflows/nightly.yml` workflow runs every night at `06:00 UTC` and can also be started manually from GitHub Actions. It runs API and UI scenarios in separate jobs, merges both `reports/allure-results` artifacts, generates one Allure report, and publishes it to GitHub Pages from `main`.
+
+Allure trend data is preserved through the `allure-history` cache. The publish job restores previous history before report generation and saves the newly generated history after each run.
+
+CI dependency handling is optimized for the current test split:
+
+- `actions/setup-node` uses the npm cache for `npm ci`.
+- The API job does not install Playwright browsers because `@api` scenarios do not need Chromium.
+- Browser startup is lazy: Chromium launches only for scenarios tagged `@ui`.
+- The UI job caches Playwright browser binaries from `~/.cache/ms-playwright`.
+- `npx playwright install chromium` runs only on a Playwright cache miss.
+- `npx playwright install-deps chromium` still runs in the UI job because GitHub-hosted Ubuntu runners do not reliably preserve system packages between runs.
+
 ## Layout
 
 ```
