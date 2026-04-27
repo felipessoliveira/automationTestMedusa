@@ -1,0 +1,91 @@
+name: Nightly tests
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BASE_URL: ${{ secrets.BASE_URL }}
+  LOCALE: ${{ secrets.LOCALE }}
+  MEDUSA_API_URL: ${{ secrets.MEDUSA_API_URL }}
+  MEDUSA_PUBLISHABLE_KEY: ${{ secrets.MEDUSA_PUBLISHABLE_KEY }}
+  TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+  TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+  HEADED: '0'
+
+jobs:
+  api:
+    name: API scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Seed shared user
+        run: npx ts-node scripts/seed_shared_user.ts
+
+      - name: Run @api scenarios
+        run: npm run test:api
+
+      - name: Generate Allure report
+        if: always()
+        run: npm run report:gen
+
+      - name: Upload Allure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-api
+          path: |
+            reports/allure-results
+            reports/allure-report
+          retention-days: 30
+
+  ui:
+    name: UI scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Seed shared user
+        run: npx ts-node scripts/seed_shared_user.ts
+
+      - name: Run @ui scenarios
+        run: npm run test:ui
+
+      - name: Generate Allure report
+        if: always()
+        run: npm run report:gen
+
+      - name: Upload Allure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-ui
+          path: |
+            reports/allure-results
+            reports/allure-report
+          retention-days: 30
