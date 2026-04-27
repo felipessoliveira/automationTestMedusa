@@ -14,17 +14,16 @@ import { launchOptions, contextOptions } from '../../playwright.config';
 
 setDefaultTimeout(60_000);
 
-let browser: Browser;
-
-BeforeAll(async () => {
-  browser = await chromium.launch(launchOptions);
-});
+let browser: Browser | undefined;
 
 AfterAll(async () => {
   await browser?.close();
 });
 
 Before({ tags: '@ui' }, async function (this: CustomWorld) {
+  if (!browser) {
+    browser = await chromium.launch(launchOptions);
+  }
   this.browser = browser;
   this.context = await browser.newContext(contextOptions);
   this.page = await this.context.newPage();
