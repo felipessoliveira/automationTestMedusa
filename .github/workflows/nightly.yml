@@ -127,9 +127,9 @@ jobs:
       - name: Merge allure-results from both jobs
         run: |
           mkdir -p reports/allure-results
-          cp -r allure-input/api/allure-results/. reports/allure-results/ 2>/dev/null || true
-          cp -r allure-input/ui/allure-results/. reports/allure-results/ 2>/dev/null || true
-          ls reports/allure-results | head
+          cp -r allure-input/api/reports/allure-results/. reports/allure-results/
+          cp -r allure-input/ui/reports/allure-results/. reports/allure-results/
+          echo "Merged $(ls reports/allure-results | wc -l) files"
 
       - name: Restore Allure history from gh-pages
         uses: actions/checkout@v4
