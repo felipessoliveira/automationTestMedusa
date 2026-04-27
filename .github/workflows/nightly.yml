@@ -10,7 +10,10 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
 
 env:
   BASE_URL: ${{ vars.BASE_URL }}
@@ -58,18 +61,13 @@ jobs:
           find . -path ./node_modules -prune -o -type f \( -name '*-result.json' -o -name '*-container.json' \) -print | head -20
           echo "::endgroup::"
 
-      - name: Generate Allure report
-        if: always()
-        run: npm run report:gen
-
-      - name: Upload Allure artifacts
+      - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-api
-          path: |
-            reports/allure-results
-            reports/allure-report
+          path: reports/allure-results
+          if-no-files-found: warn
           retention-days: 30
 
   ui:
@@ -108,18 +106,13 @@ jobs:
           find . -path ./node_modules -prune -o -type f \( -name '*-result.json' -o -name '*-container.json' \) -print | head -20
           echo "::endgroup::"
 
-      - name: Generate Allure report
-        if: always()
-        run: npm run report:gen
-
-      - name: Upload Allure artifacts
+      - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-ui
-          path: |
-            reports/allure-results
-            reports/allure-report
+          path: reports/allure-results
+          if-no-files-found: warn
           retention-days: 30
 
   publish-report:
@@ -128,6 +121,9 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -140,64 +136,91 @@ jobs:
 
       - name: Download api results
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: allure-api
           path: allure-input/api
 
       - name: Download ui results
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: allure-ui
           path: allure-input/ui
 
+      - name: Restore Allure history cache
+        uses: actions/cache/restore@v4
+        with:
+          path: allure-history
+          key: allure-history-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            allure-history-
+
       - name: Inspect downloaded artifacts (debug)
         run: |
           echo "::group::api artifact tree"
-          find allure-input/api -maxdepth 3 -type d
+          find allure-input/api -maxdepth 3 -type d 2>/dev/null || echo "(no api artifact)"
           echo "::endgroup::"
           echo "::group::ui artifact tree"
-          find allure-input/ui -maxdepth 3 -type d
+          find allure-input/ui -maxdepth 3 -type d 2>/dev/null || echo "(no ui artifact)"
           echo "::endgroup::"
 
       - name: Merge allure-results from both jobs
         run: |
           mkdir -p reports/allure-results
           shopt -s nullglob
-          for src in allure-input/api/allure-results allure-input/api/reports/allure-results \
-                     allure-input/ui/allure-results allure-input/ui/reports/allure-results; do
+          for src in allure-input/api allure-input/api/allure-results allure-input/api/reports/allure-results \
+                     allure-input/ui allure-input/ui/allure-results allure-input/ui/reports/allure-results; do
             if [ -d "$src" ]; then
               echo "Copying from $src"
               cp -r "$src/." reports/allure-results/
             fi
           done
-          echo "Merged $(ls reports/allure-results 2>/dev/null | wc -l) files"
-
-      - name: Restore Allure history from gh-pages
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          path: gh-pages-prev
-        continue-on-error: true
+          result_count="$(find reports/allure-results -maxdepth 1 -name '*-result.json' | wc -l | tr -d ' ')"
+          echo "Merged $result_count Allure result files"
+          if [ "$result_count" -eq 0 ]; then
+            echo "No Allure result files were found. Cannot publish an empty report."
+            exit 1
+          fi
 
       - name: Copy previous history into results
         run: |
-          if [ -d gh-pages-prev/history ]; then
+          if [ -d allure-history ]; then
             mkdir -p reports/allure-results/history
-            cp -r gh-pages-prev/history/. reports/allure-results/history/
-            echo "Restored history from gh-pages."
+            cp -r allure-history/. reports/allure-results/history/
+            echo "Restored history from cache."
           else
-            echo "No previous history found (first run or branch missing)."
+            echo "No previous history found."
           fi
 
       - name: Generate merged Allure report
         run: npm run report:gen
 
-      - name: Publish to Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Prepare Allure history cache
+        run: |
+          rm -rf allure-history
+          mkdir -p allure-history
+          if [ -d reports/allure-report/history ]; then
+            cp -r reports/allure-report/history/. allure-history/
+            echo "Prepared generated history for cache."
+          else
+            echo "No generated history directory found."
+          fi
+
+      - name: Save Allure history cache
+        uses: actions/cache/save@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./reports/allure-report
-          keep_files: false
-          user_name: 'github-actions[bot]'
-          user_email: '41898282+github-actions[bot]@users.noreply.github.com'
-          commit_message: 'docs(allure): publish report for run ${{ github.run_id }}'
+          path: allure-history
+          key: allure-history-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports/allure-report
+
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
