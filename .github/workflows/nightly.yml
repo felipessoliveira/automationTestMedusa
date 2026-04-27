@@ -10,11 +10,11 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BASE_URL: ${{ secrets.BASE_URL }}
-  LOCALE: ${{ secrets.LOCALE }}
-  MEDUSA_API_URL: ${{ secrets.MEDUSA_API_URL }}
+  BASE_URL: ${{ vars.BASE_URL }}
+  LOCALE: ${{ vars.LOCALE }}
+  MEDUSA_API_URL: ${{ vars.MEDUSA_API_URL }}
   MEDUSA_PUBLISHABLE_KEY: ${{ secrets.MEDUSA_PUBLISHABLE_KEY }}
-  TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+  TEST_USER_EMAIL: ${{ vars.TEST_USER_EMAIL }}
   TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
   HEADED: '0'
 
