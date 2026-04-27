@@ -9,6 +9,9 @@ concurrency:
   group: nightly-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 env:
   BASE_URL: ${{ vars.BASE_URL }}
   LOCALE: ${{ vars.LOCALE }}
@@ -92,3 +95,68 @@ jobs:
             reports/allure-results
             reports/allure-report
           retention-days: 30
+
+  publish-report:
+    name: Publish Allure to Pages
+    needs: [api, ui]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download api results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-api
+          path: allure-input/api
+
+      - name: Download ui results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-ui
+          path: allure-input/ui
+
+      - name: Merge allure-results from both jobs
+        run: |
+          mkdir -p reports/allure-results
+          cp -r allure-input/api/allure-results/. reports/allure-results/ 2>/dev/null || true
+          cp -r allure-input/ui/allure-results/. reports/allure-results/ 2>/dev/null || true
+          ls reports/allure-results | head
+
+      - name: Restore Allure history from gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages-prev
+        continue-on-error: true
+
+      - name: Copy previous history into results
+        run: |
+          if [ -d gh-pages-prev/history ]; then
+            mkdir -p reports/allure-results/history
+            cp -r gh-pages-prev/history/. reports/allure-results/history/
+            echo "Restored history from gh-pages."
+          else
+            echo "No previous history found (first run or branch missing)."
+          fi
+
+      - name: Generate merged Allure report
+        run: npm run report:gen
+
+      - name: Publish to Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports/allure-report
+          keep_files: false
+          user_name: 'github-actions[bot]'
+          user_email: '41898282+github-actions[bot]@users.noreply.github.com'
+          commit_message: 'docs(allure): publish report for run ${{ github.run_id }}'
