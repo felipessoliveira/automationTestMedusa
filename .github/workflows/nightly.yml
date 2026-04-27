@@ -45,6 +45,19 @@ jobs:
       - name: Run @api scenarios
         run: npm run test:api
 
+      - name: Locate allure results (debug)
+        if: always()
+        run: |
+          echo "::group::Workspace top-level"
+          ls -la
+          echo "::endgroup::"
+          echo "::group::reports/ tree"
+          ls -laR reports/ 2>/dev/null || echo "(no reports/ dir)"
+          echo "::endgroup::"
+          echo "::group::Any *-result.json file in workspace"
+          find . -path ./node_modules -prune -o -type f \( -name '*-result.json' -o -name '*-container.json' \) -print | head -20
+          echo "::endgroup::"
+
       - name: Generate Allure report
         if: always()
         run: npm run report:gen
@@ -81,6 +94,19 @@ jobs:
 
       - name: Run @ui scenarios
         run: npm run test:ui
+
+      - name: Locate allure results (debug)
+        if: always()
+        run: |
+          echo "::group::Workspace top-level"
+          ls -la
+          echo "::endgroup::"
+          echo "::group::reports/ tree"
+          ls -laR reports/ 2>/dev/null || echo "(no reports/ dir)"
+          echo "::endgroup::"
+          echo "::group::Any *-result.json file in workspace"
+          find . -path ./node_modules -prune -o -type f \( -name '*-result.json' -o -name '*-container.json' \) -print | head -20
+          echo "::endgroup::"
 
       - name: Generate Allure report
         if: always()
@@ -124,12 +150,27 @@ jobs:
           name: allure-ui
           path: allure-input/ui
 
+      - name: Inspect downloaded artifacts (debug)
+        run: |
+          echo "::group::api artifact tree"
+          find allure-input/api -maxdepth 3 -type d
+          echo "::endgroup::"
+          echo "::group::ui artifact tree"
+          find allure-input/ui -maxdepth 3 -type d
+          echo "::endgroup::"
+
       - name: Merge allure-results from both jobs
         run: |
           mkdir -p reports/allure-results
-          cp -r allure-input/api/reports/allure-results/. reports/allure-results/
-          cp -r allure-input/ui/reports/allure-results/. reports/allure-results/
-          echo "Merged $(ls reports/allure-results | wc -l) files"
+          shopt -s nullglob
+          for src in allure-input/api/allure-results allure-input/api/reports/allure-results \
+                     allure-input/ui/allure-results allure-input/ui/reports/allure-results; do
+            if [ -d "$src" ]; then
+              echo "Copying from $src"
+              cp -r "$src/." reports/allure-results/
+            fi
+          done
+          echo "Merged $(ls reports/allure-results 2>/dev/null | wc -l) files"
 
       - name: Restore Allure history from gh-pages
         uses: actions/checkout@v4
