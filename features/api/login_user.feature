@@ -1,4 +1,4 @@
-@api @auth
+@api @auth @EP-3
 Feature: Login user via Medusa Store API
 
   Scenario Outline: Existing customer signs in through the Store API
