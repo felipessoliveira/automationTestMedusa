@@ -1,4 +1,4 @@
-@ui @auth
+@ui @auth @EP-2
 Feature: Login via storefront UI
 
   Scenario Outline: Existing customer signs in

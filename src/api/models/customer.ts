@@ -6,6 +6,11 @@ export interface RegisterCustomerPayload {
   phone?: string;
 }
 
+export interface LoginCustomerPayload {
+  email: string;
+  password: string;
+}
+
 export interface Customer {
   id: string;
   email: string;
