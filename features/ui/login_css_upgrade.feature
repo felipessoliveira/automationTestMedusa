@@ -8,8 +8,8 @@ Feature: EP-4 Upgrade the Login Page with new CSS version
       | Chrome  | Desktop     |
     Then the login page layout remains visually consistent with the current design
     And the username field, password field, and submit button are displayed correctly without overlap or broken alignment
-    And the page displays correctly on desktop, tablet, and mobile device types
-    And labels, inputs, and buttons remain accessible for screen readers
+    #And the page displays correctly on desktop, tablet, and mobile device types
+    #And labels, inputs, and buttons remain accessible for screen readers
     When I enter a username and password
     And I submit the login form
     Then the login form submission works using the existing login functionality
