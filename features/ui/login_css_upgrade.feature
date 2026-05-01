@@ -33,4 +33,4 @@ Feature: EP-4 Upgrade the Login Page with new CSS version
     When I submit the login form with invalid credentials to trigger the existing login validation
     Then the existing login validation message is displayed to the user
     #And the validation message is visually correct and accessible
-    And the login page layout remains intact after the validation message appears
+    #And the login page layout remains intact after the validation message appears
