@@ -45,4 +45,40 @@ export class CartPage extends BasePage {
       })
       .toBeTruthy();
   }
+
+  async enterShippingAddress(): Promise<void> {
+    await this.page.locator('[data-testid="shipping-address-1"]').fill('123 Shipping St');
+    await this.page.locator('[data-testid="shipping-city"]').fill('Shipping City');
+    await this.page.locator('[data-testid="shipping-postal-code"]').fill('12345');
+  }
+
+  async saveShippingAddress(): Promise<void> {
+    await this.page.locator('[data-testid="save-shipping-address-button"]').click();
+  }
+
+  async expectShippingAddressSaved(): Promise<void> {
+    await expect(this.page.locator('[data-testid="shipping-address-saved-badge"]')).toBeVisible();
+  }
+
+  async enterBillingAddress(): Promise<void> {
+    await this.page.locator('[data-testid="billing-address-1"]').fill('456 Billing Rd');
+    await this.page.locator('[data-testid="billing-city"]').fill('Billing City');
+    await this.page.locator('[data-testid="billing-postal-code"]').fill('67890');
+  }
+
+  async enterEmailAddress(email: string): Promise<void> {
+    await this.page.locator('[data-testid="cart-email-input"]').fill(email);
+  }
+
+  async saveBillingAddressAndEmail(): Promise<void> {
+    await this.page.locator('[data-testid="save-billing-address-button"]').click();
+  }
+
+  async expectBillingAddressAndEmailSaved(): Promise<void> {
+    await expect(this.page.locator('[data-testid="billing-address-saved-badge"]')).toBeVisible();
+  }
+
+  async expectOnCartPage(): Promise<void> {
+    await this.expectUrlContains('/cart');
+  }
 }
