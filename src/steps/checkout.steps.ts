@@ -16,6 +16,7 @@ Given('a customer has items in their cart', async function (this: CustomWorld) {
   const pdp = new ProductPage(this.page);
   if (await pdp.canAddToCart()) {
     await pdp.addToCart();
+    await this.page.waitForTimeout(2000);
   } else {
     throw new Error('Product cannot be added to cart');
   }
