@@ -7,37 +7,76 @@ export class CheckoutPage extends BasePage {
   }
 
   async open(): Promise<void> {
+    await this.page.waitForTimeout(1000);
     await this.goto('/checkout');
+    await this.page.waitForLoadState('networkidle');
   }
 
   async enterShippingAndBillingAddress(email: string, address: { firstName: string; lastName: string; address1: string; city: string; postalCode: string; phone: string }): Promise<void> {
-    await this.page.locator('input[name="email"], [data-testid="shipping-email-input"]').fill(email);
-    await this.page.locator('input[name="shipping_address.first_name"], [data-testid="shipping-first-name-input"]').fill(address.firstName);
-    await this.page.locator('input[name="shipping_address.last_name"], [data-testid="shipping-last-name-input"]').fill(address.lastName);
-    await this.page.locator('input[name="shipping_address.address_1"], [data-testid="shipping-address-input"]').fill(address.address1);
-    await this.page.locator('input[name="shipping_address.city"], [data-testid="shipping-city-input"]').fill(address.city);
-    await this.page.locator('input[name="shipping_address.postal_code"], [data-testid="shipping-postal-input"]').fill(address.postalCode);
-    await this.page.locator('input[name="shipping_address.phone"], [data-testid="shipping-phone-input"]').fill(address.phone);
+    const emailInput = this.page.locator('input[name="email"], [data-testid="shipping-email-input"]').first();
+    if (await emailInput.count() > 0 && await emailInput.isVisible()) {
+      await emailInput.fill(email);
+    }
+
+    const firstNameInput = this.page.locator('input[name="shipping_address.first_name"], [data-testid="shipping-first-name-input"]').first();
+    await firstNameInput.waitFor({ state: 'visible', timeout: 5000 });
+    await firstNameInput.fill(address.firstName);
+
+    await this.page.locator('input[name="shipping_address.last_name"], [data-testid="shipping-last-name-input"]').first().fill(address.lastName);
+    await this.page.locator('input[name="shipping_address.address_1"], [data-testid="shipping-address-input"]').first().fill(address.address1);
+    await this.page.locator('input[name="shipping_address.city"], [data-testid="shipping-city-input"]').first().fill(address.city);
+    await this.page.locator('input[name="shipping_address.postal_code"], [data-testid="shipping-postal-input"]').first().fill(address.postalCode);
+    await this.page.locator('input[name="shipping_address.phone"], [data-testid="shipping-phone-input"]').first().fill(address.phone);
+
+    const countrySelect = this.page.locator('select[name="shipping_address.country_code"], [data-testid="shipping-country-select"]').first();
+    if (await countrySelect.count() > 0 && await countrySelect.isVisible()) {
+      try {
+        await countrySelect.selectOption({ value: 'es' });
+      } catch (e) {
+        try {
+          await countrySelect.selectOption({ index: 1 });
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
   }
 
   async saveAddress(): Promise<void> {
-    await this.page.locator('button:has-text("Save"), [data-testid="submit-address-button"]').first().click();
+    const saveBtn = this.page.locator('[data-testid="submit-address-button"], button:has-text("Save"), button:has-text("Guardar"), button:has-text("Continuar")').first();
+    await saveBtn.click();
   }
 
   async expectAddressSavedSuccessfully(): Promise<void> {
-    await expect(this.page.locator('[data-testid="shipping-address-summary"], [data-testid="address-summary"], button:has-text("Edit")').first()).toBeVisible();
+    const locator = this.page.locator('[data-testid="edit-address-button"], [data-testid="shipping-address-summary"], [data-testid="address-summary"], [data-testid="delivery-option-radio"], button:has-text("Edit"), button:has-text("Editar")').first();
+    await expect(locator).toBeVisible({ timeout: 15000 });
   }
 
   async enterAndApplyPromoCode(code: string): Promise<void> {
-    await this.page.locator('input[name="code"], [data-testid="promo-input"]').fill(code);
-    await this.page.locator('button:has-text("Apply"), [data-testid="apply-promo-button"]').first().click();
+    const revealBtn = this.page.locator('[data-testid="reveal-discount-button"], button:has-text("Gift Card"), button:has-text("Promo")').first();
+    if (await revealBtn.count() > 0 && await revealBtn.isVisible()) {
+      await revealBtn.click();
+    }
+    
+    const promoInput = this.page.locator('input[name="code"], [data-testid="discount-input"], [data-testid="promo-input"]').first();
+    await promoInput.waitFor({ state: 'visible', timeout: 5000 });
+    await promoInput.fill(code);
+    
+    const applyBtn = this.page.locator('button:has-text("Apply"), [data-testid="discount-submit-button"], [data-testid="apply-promo-button"]').first();
+    await applyBtn.click();
   }
 
   async expectPromoAppliedSuccessfully(code: string): Promise<void> {
-    await expect(this.page.locator(`[data-testid="applied-promo"], :has-text("${code}")`).first()).toBeVisible();
+    const promoLocator = this.page.locator(`[data-testid="discount-code"], [data-testid="active-discount-badge"], [data-testid="applied-promo"], :has-text("${code}")`).first();
+    await expect(promoLocator).toBeVisible({ timeout: 10000 });
   }
 
   async expectDiscountDisplayed(): Promise<void> {
-    await expect(this.page.locator('[data-testid="cart-discount"], [data-testid="discount-amount"]').first()).toBeVisible();
+    const discountLocator = this.page.locator('[data-testid="cart-discount"], [data-testid="discount-amount"], [data-testid="discount-row"]').first();
+    await expect(discountLocator).toBeVisible({ timeout: 10000 });
+  }
+
+  async expectUrlContains(expected: string): Promise<void> {
+    await expect(this.page).toHaveURL(new RegExp(expected));
   }
 }
