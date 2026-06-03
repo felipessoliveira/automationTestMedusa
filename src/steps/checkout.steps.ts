@@ -16,6 +16,9 @@ Given('a customer has items in their cart', async function (this: CustomWorld) {
   const pdp = new ProductPage(this.page);
   if (await pdp.canAddToCart()) {
     await pdp.addToCart();
+    // Wait for the cart state to persist and settle
+    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForTimeout(2000);
   } else {
     throw new Error('First available product is not in stock.');
   }
