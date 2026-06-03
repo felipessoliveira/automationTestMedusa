@@ -14,6 +14,7 @@ Given('a customer has items in their cart', async function (this: CustomWorld) {
   await home.openProductByHref(products[0].href);
   const pdp = new ProductPage(this.page);
   await pdp.addToCart();
+  await this.page.waitForTimeout(2000); // Wait for cart state to stabilize
 });
 
 Given('the customer is on the checkout page', async function (this: CustomWorld) {
