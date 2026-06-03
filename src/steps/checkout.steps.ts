@@ -14,8 +14,19 @@ Given('a customer has items in their cart', async function (this: CustomWorld) {
     throw new Error('No product links were discovered on the storefront.');
   }
   await home.openProductByHref(products[0].href);
+  
+  // Select variant option if available
+  const optionButton = this.page.locator('[data-testid="option-button"]');
+  if (await optionButton.first().isVisible({ timeout: 5000 }).catch(() => false)) {
+    await optionButton.first().click();
+    await this.page.waitForTimeout(500); // Wait for variant selection state
+  }
+  
   const pdp = new ProductPage(this.page);
   await pdp.addToCart();
+  
+  // Wait for the cart API response and state to update
+  await this.page.waitForTimeout(2000);
 });
 
 Given('the customer is on the checkout page', async function (this: CustomWorld) {
