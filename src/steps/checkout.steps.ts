@@ -63,6 +63,7 @@ Given('the customer has saved their shipping address, billing address, and email
     phone: '1234567890',
     country: 'United States'
   });
+  await checkout.expectDetailsSaved();
 });
 
 When('the customer enters and applies a valid promo code {string}', async function (this: CustomWorld, code: string) {
