@@ -125,6 +125,15 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Upload Playwright traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-ui
+          path: reports/traces/**/*.zip
+          if-no-files-found: ignore
+          retention-days: 30
+
   publish-report:
     name: Build Allure Pages artifact
     needs: [api, ui]

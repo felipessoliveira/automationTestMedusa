@@ -43,7 +43,7 @@ npm run report:gen    # builds reports/allure-report from reports/allure-results
 npm run report:open   # opens the report in a browser
 ```
 
-On failure each UI scenario attaches a full-page screenshot + rendered HTML; each API scenario attaches the request payload + response body + status.
+On failure each UI scenario attaches a full-page screenshot + rendered HTML and writes a Playwright trace zip under `reports/traces/`; each API scenario attaches the request payload + response body + status. In GitHub Actions, failed UI traces are uploaded as the `playwright-traces-ui` artifact.
 
 ## Layout
 
