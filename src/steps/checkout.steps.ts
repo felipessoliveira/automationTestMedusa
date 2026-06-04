@@ -10,6 +10,7 @@ Given('a customer has items in their cart', async function (this: CustomWorld) {
   
   const home = new HomePage(this.page);
   await home.open();
+  const baseUrl = new URL(this.page.url()).origin;
   const products = await home.listProducts();
   if (products.length === 0) {
     throw new Error('No products available on the storefront');
@@ -19,6 +20,14 @@ Given('a customer has items in their cart', async function (this: CustomWorld) {
   const pdp = new ProductPage(this.page);
   if (await pdp.canAddToCart()) {
     await pdp.addToCart();
+    
+    // Explicitly wait to ensure async cart creation & backend requests are completed
+    await this.page.waitForTimeout(3000);
+    await this.page.goto(`${baseUrl}/cart`);
+    
+    // Ensure the checkout button is visible on cart page, proving product was successfully added
+    const checkoutBtn = this.page.locator('[data-testid="checkout-button"], a[href="/checkout"], button:has-text("Go to checkout"), button:has-text("Checkout")');
+    await expect(checkoutBtn.first()).toBeVisible({ timeout: 15000 });
   } else {
     throw new Error('The first listed product is not available to add to cart.');
   }
@@ -73,5 +82,3 @@ Then('the customer remains on the checkout page without being redirected to the 
   expect(currentUrl).not.toContain('/payment');
   expect(currentUrl).not.toContain('/confirmed');
 });
-
-// @EP-9
