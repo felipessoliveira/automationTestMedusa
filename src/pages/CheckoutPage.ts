@@ -36,14 +36,15 @@ export class CheckoutPage extends BasePage {
     zip: string,
     phone: string
   ): Promise<void> {
-    await this.emailInput().waitFor({ state: 'visible', timeout: 15000 });
-    await this.emailInput().fill(email);
-    await this.firstNameInput().fill(first);
-    await this.lastNameInput().fill(last);
-    await this.addressInput().fill(address);
+    const emailEl = this.emailInput().first();
+    await emailEl.waitFor({ state: 'visible', timeout: 15000 });
+    await emailEl.fill(email);
+    await this.firstNameInput().first().fill(first);
+    await this.lastNameInput().first().fill(last);
+    await this.addressInput().first().fill(address);
 
-    // Select country if select element is present
-    const countryEl = this.countrySelect();
+    const countryEl = this.countrySelect().first();
+    await countryEl.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     if (await countryEl.isVisible()) {
       try {
         await countryEl.selectOption({ value: 'es' });
@@ -51,14 +52,22 @@ export class CheckoutPage extends BasePage {
         try {
           await countryEl.selectOption({ value: 'ES' });
         } catch (e2) {
-          await countryEl.selectOption({ index: 1 }).catch(() => {});
+          try {
+            await countryEl.selectOption({ label: 'España' });
+          } catch (e3) {
+            try {
+              await countryEl.selectOption({ label: 'Spain' });
+            } catch (e4) {
+              await countryEl.selectOption({ index: 1 }).catch(() => {});
+            } 
+          }
         }
       }
     }
 
-    await this.cityInput().fill(city);
-    await this.postalCodeInput().fill(zip);
-    await this.phoneInput().fill(phone);
+    await this.cityInput().first().fill(city);
+    await this.postalCodeInput().first().fill(zip);
+    await this.phoneInput().first().fill(phone);
 
     const checkbox = this.billingSameAsShippingCheckbox().first();
     if (await checkbox.isVisible()) {
@@ -75,28 +84,21 @@ export class CheckoutPage extends BasePage {
   }
 
   async applyPromo(code: string): Promise<void> {
-    const addPromoToggle = this.page.locator('[data-testid="add-discount-button"], button:has-text("Add gift card"), button:has-text("Add discount"), button:has-text("Aplicar descuento"), button:has-text("Código de descuento")');
+    const addPromoToggle = this.page.locator('[data-testid="add-discount-button"], button:has-text("Add gift card"), button:has-text("Add discount"), button:has-text("Aplicar descuento"), button:has-text("Código de descuento")').first();
+    await addPromoToggle.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     if (await addPromoToggle.isVisible()) {
       await addPromoToggle.click();
     }
-    await this.promoInput().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    await this.promoInput().fill(code);
-    await this.applyPromoButton().click();
+    const input = this.promoInput().first();
+    await input.waitFor({ state: 'visible', timeout: 5000 });
+    await input.fill(code);
+    await this.applyPromoButton().first().click();
     await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
   async expectAddressSaved(): Promise<void> {
-    const editBtn = this.page.locator('[data-testid="edit-address-button"], button:has-text("Edit"), button:has-text("Editar")');
-    const isEditVisible = await editBtn.first().isVisible().catch(() => false);
-    if (isEditVisible) {
-      return;
-    }
-    try {
-      await expect(this.emailInput().first()).toBeVisible({ timeout: 5000 });
-      await expect(this.emailInput().first()).toHaveValue(/.+/);
-    } catch (e) {
-      // Step completed and collapsed on the UI
-    }
+    const successIndicator = this.page.locator('[data-testid="edit-address-button"], [data-testid="shipping-address-summary"], [data-testid="delivery-option-radio"], button:has-text("Edit"), button:has-text("Editar")').first();
+    await expect(successIndicator).toBeVisible({ timeout: 15000 });
   }
 
   async expectPromoApplied(code: string): Promise<void> {
