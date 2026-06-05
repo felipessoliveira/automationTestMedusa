@@ -1,0 +1,15 @@
+{
+  "default": {
+    "first_name": "Felipe",
+    "last_name": "Oliveira",
+    "address": "Calle Gran Via 1",
+    "postal_code": "28013",
+    "city": "Madrid",
+    "country_code": "es",
+    "province": "Madrid",
+    "phone": "+34911111111",
+    "email": "qa.checkout@example.com"
+  }
+}
+
+// @EP-9
