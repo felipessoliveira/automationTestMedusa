@@ -48,11 +48,11 @@ Then('the address and email details are saved successfully', async function (thi
   await expect(this.page.getByTestId('shipping-first-name-input')).toHaveValue('John');
 });
 
-Then('the customer remains on the checkout page without being redirected to the delivery step or any other page', async function (this: CustomWorld) {
+Then('the customer remains on the checkout page at the delivery step', async function (this: CustomWorld) {
   if (!this.page) throw new Error('UI page not initialized');
   const checkout = new CheckoutPage(this.page);
   await this.page.waitForTimeout(2000);
-  await checkout.expectUrlContains('step=address');
+  await checkout.expectUrlContains('step=delivery');
 });
 
 // @EP-9
