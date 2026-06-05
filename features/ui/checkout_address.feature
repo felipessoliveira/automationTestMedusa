@@ -9,4 +9,4 @@ Feature: Fix checkout page address and promo code discount preview
     And the customer is on the checkout page
     When the customer enters and saves their shipping address, billing address, and email
     Then the address and email details are saved successfully
-    And the customer remains on the checkout page without being redirected to the delivery step or any other page
+    And the customer remains on the checkout page at the delivery step
