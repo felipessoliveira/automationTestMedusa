@@ -9,11 +9,17 @@ Feature: Fix checkout page address and promo code discount preview
     And I add a product to the cart using the "default" product template with:
       | name | <name> |
     And I am on the checkout address step
-    When I save the checkout address using the "default" address template with:
-      | email | <email> |
+    When I save the checkout address with:
+      | first_name   | <first_name>   |
+      | last_name    | <last_name>    |
+      | address      | <address>      |
+      | postal_code  | <postal_code>  |
+      | city         | <city>         |
+      | country_code | <country_code> |
+      | email        | <email>        |
     Then the checkout address and email details are saved
     And I remain on the checkout address step
 
     Examples:
-      | name           | email                          |
-      | Medusa T-Shirt | qa.ui.<timestamp>@example.com  |
+      | name           | first_name | last_name | address      | postal_code | city   | country_code | email                         |
+      | Medusa T-Shirt | Felipe     | Oliveira  | Calle Mayor 1 | 28013       | Madrid | es           | qa.ui.<timestamp>@example.com |
