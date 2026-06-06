@@ -10,7 +10,7 @@ Feature: Fix checkout page address and promo code discount preview
     And I add a product to the cart using the "default" product template with:
       | name | Medusa T-Shirt |
     And I am on the checkout address step
-    When I save the shipping address, billing address, and email using the "default" address template with:
+    When I save the shipping address, billing address, and email with:
       | email | qa.checkout.<timestamp>@example.com |
     Then the address and email details are saved successfully
     And I remain on the checkout page without being redirected to the delivery step
