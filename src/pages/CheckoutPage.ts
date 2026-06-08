@@ -7,7 +7,7 @@ export class CheckoutPage extends BasePage {
   }
 
   async open(): Promise<void> {
-    await this.goto('/checkout');
+    await this.goto('/checkout?step=address');
   }
 
   async fillShippingAddress(address: {
@@ -18,7 +18,9 @@ export class CheckoutPage extends BasePage {
     province?: string;
     email: string;
   }): Promise<void> {
-    await this.page.getByTestId('shipping-first-name-input').fill(address.first_name);
+    const firstNameInput = this.page.getByTestId('shipping-first-name-input');
+    await firstNameInput.waitFor({ state: 'visible', timeout: 15_000 });
+    await firstNameInput.fill(address.first_name);
     await this.page.getByTestId('shipping-last-name-input').fill(address.last_name);
     await this.page.getByTestId('shipping-city-input').fill(address.city);
     await this.page.getByTestId('shipping-country-select').selectOption(address.country);
