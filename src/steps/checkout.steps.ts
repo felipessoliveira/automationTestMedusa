@@ -15,7 +15,7 @@ When(
   async function (this: CustomWorld, template: string, table: DataTable) {
     if (!this.page) throw new Error('UI page not initialized (missing @ui tag?)');
     const overrides = rowsToObject(table);
-    const address = buildFixture<AddressPayload>('addresses', overrides, template);
+    const address = buildFixture<AddressPayload>('users', overrides, template);
     this.data.address = address;
     const checkout = new CheckoutPage(this.page);
     await checkout.fillShippingAddress(address);
