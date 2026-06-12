@@ -1,0 +1,13 @@
+{
+  "shipping_first_name": "QA",
+  "shipping_last_name": "Tester",
+  "shipping_address": "Calle Gran Via 1",
+  "shipping_city": "Madrid",
+  "shipping_province": "Madrid",
+  "shipping_postal_code": "28013",
+  "shipping_country_code": "es",
+  "shipping_phone": "+34600000000",
+  "email": "qa.checkout@example.com"
+}
+
+// @EP-9
