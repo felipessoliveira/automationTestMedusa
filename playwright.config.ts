@@ -12,7 +12,7 @@ export const launchOptions: LaunchOptions = {
 export const contextOptions: BrowserContextOptions = {
   viewport: { width: 1440, height: 900 },
   locale: 'es-ES',
-  recordVideo: process.env.RECORD_VIDEO === '1' ? { dir: 'reports/videos' } : undefined,
+  recordVideo: { dir: 'reports/videos' },
 };
 
 export default {
