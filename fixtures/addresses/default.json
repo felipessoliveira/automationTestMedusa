@@ -1,0 +1,12 @@
+{
+  "firstName": "QA",
+  "lastName": "Tester",
+  "address": "Calle Gran Vía 1",
+  "city": "Madrid",
+  "postalCode": "28013",
+  "countryCode": "es",
+  "email": "qa.checkout@example.com",
+  "phone": "+34600000000"
+}
+
+// @EP-9
