@@ -44,13 +44,24 @@ export class CheckoutAddressPage {
   /** Submit the address form via the "Continue to delivery" button. */
   async submitAddress(): Promise<void> {
     await this.page.getByTestId('submit-address-button').click();
-    // Wait briefly for any potential navigation or network activity to settle
-    await this.page.waitForTimeout(2000);
+    // Wait for navigation to settle after form submission
+    await this.page.waitForLoadState('networkidle', { timeout: 15_000 });
   }
 
-  /** Assert the page URL still contains step=address (no redirect happened). */
-  async expectStillOnAddressStep(): Promise<void> {
-    await expect(this.page).toHaveURL(/step=address/);
+  /**
+   * Assert the page URL remains within the checkout flow.
+   * After a successful address save the app advances to step=delivery —
+   * that is the expected, correct behaviour.  We only assert that we have
+   * NOT been redirected outside the checkout flow entirely (e.g. back to
+   * cart or to an error page).
+   */
+  async expectStillInCheckoutFlow(): Promise<void> {
+    await expect(this.page).toHaveURL(/\/checkout/, { timeout: 10_000 });
+  }
+
+  /** Assert the page URL is on the delivery step (address was accepted). */
+  async expectOnDeliveryStep(): Promise<void> {
+    await expect(this.page).toHaveURL(/step=delivery/, { timeout: 10_000 });
   }
 
   /** Assert the email input retains the submitted value (data saved). */
