@@ -77,22 +77,20 @@ When(
 
 // ---------------------------------------------------------------------------
 // Assertion: address and email saved successfully
+// The application redirects to step=delivery upon a successful address save —
+// that redirect IS the confirmation that the address was accepted.
 // ---------------------------------------------------------------------------
 Then(
   'the address and email details are saved successfully',
   async function (this: CustomWorld) {
     if (!this.page) throw new Error('UI page not initialized (missing @ui tag?)');
-    // The submit-address-button should no longer be visible OR the email field
-    // retains its value, proving the form was accepted without an error state.
-    // We check the button is either gone or disabled as a proxy for success.
-    const submitBtn = this.page.getByTestId('submit-address-button');
-    const isVisible = await submitBtn.isVisible().catch(() => false);
-    if (isVisible) {
-      // If still visible (e.g. accordion collapsed), confirm it is not showing
-      // a validation error by verifying the email field value was preserved.
-      const checkoutPage = new CheckoutAddressPage(this.page);
-      await checkoutPage.expectEmailSaved(this.data['checkoutEmail'] as string);
-    }
+
+    const checkoutPage = new CheckoutAddressPage(this.page);
+
+    // A successful address save advances the checkout to the delivery step.
+    // Verify we reached that step (i.e. the form was accepted without error).
+    await checkoutPage.expectOnDeliveryStep();
+
     // No error banner should be present
     const errorBanner = this.page.locator('[data-testid="address-error"]');
     const errorCount = await errorBanner.count();
@@ -101,14 +99,15 @@ Then(
 );
 
 // ---------------------------------------------------------------------------
-// Assertion: customer remains on checkout address page (no redirect)
+// Assertion: customer remains within the checkout flow (no erroneous redirect
+// to cart, home, or an error page).
 // ---------------------------------------------------------------------------
 Then(
-  'the customer remains on the checkout address page without being redirected',
+  'the customer is not redirected away from the checkout flow',
   async function (this: CustomWorld) {
     if (!this.page) throw new Error('UI page not initialized (missing @ui tag?)');
     const checkoutPage = new CheckoutAddressPage(this.page);
-    await checkoutPage.expectStillOnAddressStep();
+    await checkoutPage.expectStillInCheckoutFlow();
   },
 );
 
