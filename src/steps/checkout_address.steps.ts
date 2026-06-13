@@ -1,8 +1,7 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { CustomWorld } from '../support/world';
-import { HomePage, ProductCandidate } from '../pages/HomePage';
+import { HomePage } from '../pages/HomePage';
 import { ProductPage } from '../pages/ProductPage';
-import { CartPage } from '../pages/CartPage';
 import { CheckoutAddressPage } from '../pages/CheckoutAddressPage';
 
 // ---------------------------------------------------------------------------
@@ -104,7 +103,7 @@ Then(
     const checkout =
       (this.data.checkoutAddressPage as CheckoutAddressPage) ??
       new CheckoutAddressPage(this.page);
-    await checkout.expectOnAddressStep();
+    await checkout.expectRemainsOnCheckout();
   },
 );
 
