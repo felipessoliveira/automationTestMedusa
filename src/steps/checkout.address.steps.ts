@@ -68,13 +68,14 @@ When(
     const checkoutPage = new CheckoutAddressPage(this.page);
     const testEmail = config.testUser.email;
 
+    // countryCode uses lowercase to match Medusa's ISO country code option values.
     const payload = {
       firstName: 'QA',
       lastName: 'Tester',
       address: 'Calle Gran Via 1',
       city: 'Madrid',
       postalCode: '28013',
-      countryCode: 'ES',
+      countryCode: 'es',
       email: testEmail,
     };
 
