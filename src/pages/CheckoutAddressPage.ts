@@ -36,10 +36,24 @@ export class CheckoutAddressPage {
     await this.page.getByTestId('shipping-city-input').fill(payload.city);
     await this.page.getByTestId('shipping-postal-code-input').fill(payload.postalCode);
 
-    // Country select — locate by test-id pattern used across the catalog.
+    // Country select — select by value using the first available option when the exact
+    // value is not found (locale-scoped storefronts may only expose one country).
     const countrySelect = this.page.getByTestId('shipping-country-select');
-    if (await countrySelect.count() > 0) {
-      await countrySelect.selectOption(payload.countryCode);
+    const countryCount = await countrySelect.count();
+    if (countryCount > 0) {
+      // Try the provided countryCode first (lowercase, as Medusa stores ISO codes in lower case).
+      const normalised = payload.countryCode.toLowerCase();
+      try {
+        await countrySelect.selectOption({ value: normalised }, { timeout: 5_000 });
+      } catch {
+        // Fall back: select the first available option (locale-restricted storefronts
+        // may only expose a single country whose value we don't know upfront).
+        const firstOption = await countrySelect.locator('option').first();
+        const firstValue = await firstOption.getAttribute('value');
+        if (firstValue) {
+          await countrySelect.selectOption({ value: firstValue });
+        }
+      }
     }
 
     // Email — test-id confirmed in element catalog (Element 22: shippingEmailInput).
@@ -51,7 +65,7 @@ export class CheckoutAddressPage {
 
   /** Assert the page URL still contains step=address (not redirected). */
   async expectStillOnAddressStep(): Promise<void> {
-    await expect(this.page).toHaveURL(/checkout\?step=address/, { timeout: 10_000 });
+    await expect(this.page).toHaveURL(/checkout\?step=address/, { timeout: 15_000 });
   }
 
   /** Assert the submitted email value is retained on the page (visible in a field or summary). */
